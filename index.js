@@ -1,6 +1,6 @@
-const fs = require("inquirer");
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
+const cTable = require("console.table");
 
 // Departments and roles used for questions, etc. These will have to be replaced by SQL tables. These are all temporary.
 let departments = ["Engineering", "Finance", "Legal", "Sales", "Service"];
@@ -24,7 +24,7 @@ const mainMenu = [
   {
     type: "list",
     message: "What would you like to do?",
-    choices: ["View All Employees", "Add Employee", "Update Employee Role", "View All Roles", "Add Roles", "View Department", "Add Department", "Quit"],
+    choices: ["View All Employees", "View All Roles", "View All Departments", "Add Employee", "Add Role", "Add Department", "Update Employee Role", "Exit"],
     name: "whatToDo"
   }
 ]
@@ -107,7 +107,7 @@ const addDepartmentQ = [
 
 // Function that executes the program upon launch
 async function askQuestions() {
-  
+
   // Welcomes the user on their first boot-up
   console.log("Welcome to Employee Tracker! 💼")
 
@@ -118,14 +118,34 @@ async function askQuestions() {
     //console.log(questionInfo.whatToDo)
 
     switch (questionInfo.whatToDo) {
-      case "Quit":
+      case "Exit":
         keepRunning = false;
         console.log("Goodbye! 👋");
         db.end();
         break;
 
+      // Displays all employees in database in table form
       case "View All Employees":
-        console.log(`Managers: ${managers}\nEmployees: ${employees}\n`);
+        db.query('SELECT * FROM employees', function (err, results) {
+          console.log("");
+          console.table(results);
+        });
+        break;
+
+      // Displays all roles in database in table form
+      case "View All Roles":
+        db.query('SELECT * FROM roles', function (err, results) {
+          console.log("");
+          console.table(results);
+        });
+        break;
+
+      // Displays all departments in database in table form
+      case "View All Departments":
+        db.query('SELECT * FROM departments', function (err, results) {
+          console.log("");
+          console.table(results);
+        });
         break;
 
       case "Add Employee":
@@ -135,27 +155,19 @@ async function askQuestions() {
         employees.push(employeeName);
         break;
 
-      case "Update Employee Role":
-        const updateEmployeeRoleInfo = await inquirer.prompt(updateEmployeeQ);
-        console.log("This does nothing at the moment")
-        break;
-
-      case "View All Roles":
-        console.log(roles);
-        break;
-
-      case "Add Roles":
+      case "Add Role":
         const roleInfo = await inquirer.prompt(addRoleQ);
         roles.push(roleInfo.newRoleName);
-        break;
-
-      case "View Department":
-        console.log(departments);
         break;
 
       case "Add Department":
         const departmentInfo = await inquirer.prompt(addDepartmentQ);
         departments.push(departmentInfo.newDepartmentName);
+        break;
+
+      case "Update Employee Role":
+        const updateEmployeeRoleInfo = await inquirer.prompt(updateEmployeeQ);
+        console.log("This does nothing at the moment")
         break;
     }
   }
