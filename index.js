@@ -8,6 +8,17 @@ let roles = ["Sales Lead", "Salesperson", "Lead Engineer", "Software Engineer", 
 let managers = ["John Doe", "Mike Chan", "Ashley Rodriguez", "Kevin Tupik", "Kunal Singh", "Malia Brown"];
 let employees = ["Tony", "Steven", "Chai", "Manny", "Bhrayan", "Ivan"];
 
+// Connect to database
+const db = mysql.createConnection(
+  {
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'employee_db'
+  },
+  console.log(`Connected to the employee_db database.`)
+);
+
 // Main menu for this application, allows user to navigate through it
 const mainMenu = [
   {
@@ -75,7 +86,7 @@ const addRoleQ = [
     type: "input",
     message: "What is the salary of this new role?",
     name: "newRoleSalary"
-  }, 
+  },
 
   {
     type: "list",
@@ -96,6 +107,9 @@ const addDepartmentQ = [
 
 // Function that executes the program upon launch
 async function askQuestions() {
+  
+  // Welcomes the user on their first boot-up
+  console.log("Welcome to Employee Tracker! 💼")
 
   let keepRunning = true;
 
@@ -103,40 +117,47 @@ async function askQuestions() {
     const questionInfo = await inquirer.prompt(mainMenu);
     //console.log(questionInfo.whatToDo)
 
-    if (questionInfo.whatToDo === "Quit") {
-      keepRunning = false;
+    switch (questionInfo.whatToDo) {
+      case "Quit":
+        keepRunning = false;
+        console.log("Goodbye! 👋");
+        db.end();
+        break;
 
-    } else if (questionInfo.whatToDo === "View All Employees") {
-      console.log(`Managers: ${managers}\nEmployees: ${employees}\n`);
+      case "View All Employees":
+        console.log(`Managers: ${managers}\nEmployees: ${employees}\n`);
+        break;
 
-    } else if (questionInfo.whatToDo === "Add Employee") {
-      const employeeInfo = await inquirer.prompt(addEmployeeQ);
-      const employeeName = employeeInfo.newEmployeeFirstName + " " + employeeInfo.newEmployeeLastName;
+      case "Add Employee":
+        const employeeInfo = await inquirer.prompt(addEmployeeQ);
+        const employeeName = employeeInfo.newEmployeeFirstName + " " + employeeInfo.newEmployeeLastName;
 
-      employees.push(employeeName);
+        employees.push(employeeName);
+        break;
 
-    } else if (questionInfo.whatToDo === "Update Employee Role") {
-      const updateEmployeeRoleInfo = await inquirer.prompt(updateEmployeeQ);
-      console.log("This does nothing at the moment")
+      case "Update Employee Role":
+        const updateEmployeeRoleInfo = await inquirer.prompt(updateEmployeeQ);
+        console.log("This does nothing at the moment")
+        break;
 
-    } else if (questionInfo.whatToDo === "View All Roles") {
-      console.log(roles);
+      case "View All Roles":
+        console.log(roles);
+        break;
 
-    } else if (questionInfo.whatToDo === "Add Roles") {
-      const roleInfo = await inquirer.prompt(addRoleQ);
+      case "Add Roles":
+        const roleInfo = await inquirer.prompt(addRoleQ);
+        roles.push(roleInfo.newRoleName);
+        break;
 
-      roles.push(roleInfo.newRoleName);
+      case "View Department":
+        console.log(departments);
+        break;
 
-    } else if (questionInfo.whatToDo === "View Department") {
-      console.log(departments);
-
-    } else if (questionInfo.whatToDo === "Add Department") {
-      const departmentInfo = await inquirer.prompt(addDepartmentQ);
-
-      departments.push(departmentInfo.newDepartmentName);
-
-    } else keepRunning = false;
-    
+      case "Add Department":
+        const departmentInfo = await inquirer.prompt(addDepartmentQ);
+        departments.push(departmentInfo.newDepartmentName);
+        break;
+    }
   }
 }
 
