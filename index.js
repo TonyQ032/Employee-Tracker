@@ -109,7 +109,23 @@ const addDepartmentQ = [
 async function askQuestions() {
 
   // Welcomes the user on their first boot-up
-  console.log("Welcome to Employee Tracker! 💼")
+  //console.log("Welcome to Employee Tracker! 💼")
+  console.log(`
+  _______  _______  _______  __   __                                                
+  |       ||       ||   _   ||  |_|  |                                               
+  |_     _||    ___||  |_|  ||       |                                               
+    |   |  |   |___ |       ||       |                                               
+    |   |  |    ___||       ||       |                                               
+    |   |  |   |___ |   _   || ||_|| |                                               
+    |___|  |_______||__| |__||_|   |_|                                               
+   _______  _______  __    _  _______  ______    _______  _______  _______  ______   
+  |       ||       ||  |  | ||       ||    _ |  |   _   ||       ||       ||    _ |  
+  |    ___||    ___||   |_| ||    ___||   | ||  |  |_|  ||_     _||   _   ||   | ||  
+  |   | __ |   |___ |       ||   |___ |   |_||_ |       |  |   |  |  | |  ||   |_||_ 
+  |   ||  ||    ___||  _    ||    ___||    __  ||       |  |   |  |  |_|  ||    __  |
+  |   |_| ||   |___ | | |   ||   |___ |   |  | ||   _   |  |   |  |       ||   |  | |
+  |_______||_______||_|  |__||_______||___|  |_||__| |__|  |___|  |_______||___|  |_|
+  `)
 
   // Used in while loop. Loop will continue until keepRunning is set to false
   let keepRunning = true;
