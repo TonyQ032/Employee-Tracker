@@ -3,10 +3,10 @@ const mysql = require("mysql2");
 const cTable = require("console.table");
 
 // Departments and roles used for questions, etc. These will have to be replaced by SQL tables. These are all temporary.
-let departments = ["Engineering", "Finance", "Legal", "Sales", "Service"];
-let roles = ["Sales Lead", "Salesperson", "Lead Engineer", "Software Engineer", "Account Manager", "Accountant", "Legal Team Lead", "Lawyer", "Customer Service"];
-let managers = ["John Doe", "Mike Chan", "Ashley Rodriguez", "Kevin Tupik", "Kunal Singh", "Malia Brown"];
-let employees = ["Tony", "Steven", "Chai", "Manny", "Bhrayan", "Ivan"];
+let departments = [];
+let roles = [];
+let managers = [];
+let employees = [];
 
 // Connect to database
 const db = mysql.createConnection(
@@ -111,13 +111,16 @@ async function askQuestions() {
   // Welcomes the user on their first boot-up
   console.log("Welcome to Employee Tracker! 💼")
 
+  // Used in while loop. Loop will continue until keepRunning is set to false
   let keepRunning = true;
 
   while (keepRunning) {
-    const questionInfo = await inquirer.prompt(mainMenu);
-    //console.log(questionInfo.whatToDo)
 
+    // Utilizes user selection from mainMenu to delegate next action
+    const questionInfo = await inquirer.prompt(mainMenu);
     switch (questionInfo.whatToDo) {
+
+      // Ends while loop, ends connection to database, and closes program
       case "Exit":
         keepRunning = false;
         console.log("Goodbye! 👋");
@@ -126,17 +129,19 @@ async function askQuestions() {
 
       // Displays all employees in database in table form
       case "View All Employees":
-        db.query('SELECT * FROM employees', function (err, results) {
+        db.query("SELECT e1.id, e1.first_name, e1.last_name, roles.title AS role, departments.dep_name AS department, roles.salary, Concat(e2.first_name, ' ', e2.last_name) AS manager FROM employees e1 LEFT JOIN roles ON e1.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees e2 ON e2.id = e1.manager_id", function (err, results) {
           console.log("");
           console.table(results);
+          console.log("Press arrow keys to continue");
         });
         break;
 
       // Displays all roles in database in table form
       case "View All Roles":
-        db.query('SELECT * FROM roles', function (err, results) {
+        db.query('SELECT roles.id, roles.title, roles.salary, departments.dep_name AS department FROM roles JOIN departments ON roles.department_id = departments.id ORDER BY id', function (err, results) {
           console.log("");
           console.table(results);
+          console.log("Press arrow keys to continue");
         });
         break;
 
@@ -145,10 +150,23 @@ async function askQuestions() {
         db.query('SELECT * FROM departments', function (err, results) {
           console.log("");
           console.table(results);
+          console.log("Press arrow keys to continue");
         });
         break;
 
       case "Add Employee":
+
+        // // Used to get an updated array of roles and managers
+        // db.query('SELECT * FROM roles', function (err, results) {
+        //   //Obtains all roles from results
+        //   let allRoles = results.map((a) => a.title);
+        //   //console.log(allRoles)
+        //   //Clears roles value for display so that it can pull the latest from the db
+        //   roles = [];
+        //   roles = allRoles[0].split(",").concat(roles);
+        //   console.log(typeof(roles));
+        // });
+
         const employeeInfo = await inquirer.prompt(addEmployeeQ);
         const employeeName = employeeInfo.newEmployeeFirstName + " " + employeeInfo.newEmployeeLastName;
 
@@ -162,7 +180,12 @@ async function askQuestions() {
 
       case "Add Department":
         const departmentInfo = await inquirer.prompt(addDepartmentQ);
-        departments.push(departmentInfo.newDepartmentName);
+        //departments.push(departmentInfo.newDepartmentName);
+
+        db.query(`INSERT INTO departments (dep_name) VALUES ("${departmentInfo.newDepartmentName}");`, function (err, results) {
+          console.log(`\n${departmentInfo.newDepartmentName} has been added to departments! ✅`);
+        });
+
         break;
 
       case "Update Employee Role":
