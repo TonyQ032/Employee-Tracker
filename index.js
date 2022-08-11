@@ -5,7 +5,7 @@ const cTable = require("console.table");
 // Function that executes the program upon launch
 async function askQuestions() {
 
-  // Departments and roles used for questions, etc. These will have to be replaced by SQL tables. These are all temporary.
+  // Departments, roles, etc used for question choices
   let departments;
   let roles;
   let managers;
@@ -29,28 +29,6 @@ async function askQuestions() {
       message: "What would you like to do?",
       choices: ["View All Employees", "View All Roles", "View All Departments", "Add Employee", "Add Role", "Add Department", "Update Employee Role", "Exit"],
       name: "whatToDo"
-    }
-  ]
-
-  // Question asked if user decides to add a new role
-  const addRoleQ = [
-    {
-      type: "input",
-      message: "What is the name of this new role?",
-      name: "newRoleName"
-    },
-
-    {
-      type: "input",
-      message: "What is the salary of this new role?",
-      name: "newRoleSalary"
-    },
-
-    {
-      type: "list",
-      message: "What department does this role belong to?",
-      choices: departments,
-      name: "newRoleDepartment"
     }
   ]
 
@@ -175,7 +153,7 @@ async function askQuestions() {
         // Used to retrieve user input from enquirer prompt
         const employeeInfo = await inquirer.prompt(addEmployeeQ);
 
-        const {newEmployeeFirstName, newEmployeeLastName, newEmployeeRole, newEmployeeManager} = employeeInfo;
+        const { newEmployeeFirstName, newEmployeeLastName, newEmployeeRole, newEmployeeManager } = employeeInfo;
 
         // Finds Role ID which is used in creating a new employee
         const roleIdData = await db.promise().query(`SELECT * FROM roles WHERE title = '${newEmployeeRole}'`);
@@ -203,18 +181,59 @@ async function askQuestions() {
           await db.promise().query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ('${newEmployeeFirstName}', '${newEmployeeLastName}', ${roleId}, ${managerId})`);
         }
 
-        console.log(`${newEmployeeFirstName} ${newEmployeeLastName} has been added to employees! ✅`)
+        console.log(`Successfully added ${newEmployeeFirstName} ${newEmployeeLastName} to employees! ✅`)
 
         break;
 
       case "Add Role":
+
+        // Retrieves all departments and creates an array of them
+        let depData = await db.promise().query("SELECT * FROM departments")
+
+        let depArray = depData[0].map(role => role.dep_name)
+
+        departments;
+        departments = depArray;
+
+        // Question asked if user decides to add a new role
+        const addRoleQ = [
+          {
+            type: "input",
+            message: "What is the name of this new role?",
+            name: "newRoleName"
+          },
+
+          {
+            type: "input",
+            message: "What is the salary of this new role?",
+            name: "newRoleSalary"
+          },
+
+          {
+            type: "list",
+            message: "What department does this role belong to?",
+            choices: departments,
+            name: "newRoleDepartment"
+          }
+        ]
+
         const roleInfo = await inquirer.prompt(addRoleQ);
-        roles.push(roleInfo.newRoleName);
+        const {newRoleName, newRoleSalary, newRoleDepartment} = roleInfo;
+
+        // Finds Role ID which is used in creating a new employee
+        const newDepIdData = await db.promise().query(`SELECT * FROM departments WHERE dep_name = '${newRoleDepartment}'`);
+
+        const newDepId = newDepIdData[0][0].id;
+
+        // Inserts new role into roles table
+        db.query(`INSERT INTO roles (title, salary, department_id) VALUES ("${newRoleName}", ${newRoleSalary}, ${newDepId})`)
+
+        console.log(`Successfully created ${newRoleName} and added to roles! ✅`)
+
         break;
 
       case "Add Department":
         const departmentInfo = await inquirer.prompt(addDepartmentQ);
-        //departments.push(departmentInfo.newDepartmentName);
 
         db.query(`INSERT INTO departments (dep_name) VALUES ("${departmentInfo.newDepartmentName}");`, function (err, results) {
           console.log(`\n${departmentInfo.newDepartmentName} has been added to departments! ✅`);
@@ -248,7 +267,7 @@ async function askQuestions() {
             choices: employees,
             name: "updateEmployeeName"
           },
-      
+
           {
             type: "list",
             message: "Which role do you want to assign the selected employee?",
@@ -276,7 +295,7 @@ async function askQuestions() {
         db.query(`UPDATE employees SET role_id = '${newRoleId}' WHERE first_name = '${empFirstName}' AND last_name = '${empLastName}'`);
 
         console.log(`\n${empFirstName} ${empLastName}'s role has been modified to ${updRole}! ✅`);
-        
+
         break;
     }
   }
