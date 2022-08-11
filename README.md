@@ -49,7 +49,7 @@ Screenshot of the application running in a MacOS terminal:
 
 ![Screenshot of application running in MacOS Terminal](./Assets/tracker-terminal.png)
 
-A video demonstration of this application can be found by clicking [here.]()
+A video demonstration of this application can be found by clicking [here.](https://drive.google.com/file/d/1gbRlVaBy9R8gLGKAwRWPgJhHZEp9wJ_H/view)
 ## Questions
 If you have any questions, please contact me below: 
 
