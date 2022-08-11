@@ -32,22 +32,6 @@ async function askQuestions() {
     }
   ]
 
-  const updateEmployeeQ = [
-    {
-      type: "input",
-      message: "Which employee's role do you want to update?",
-      choices: employees,
-      name: "updateEmployeeName"
-    },
-
-    {
-      type: "input",
-      message: "Which role do you want to assign the selected employee?",
-      choices: roles,
-      name: "updateEmployeeRole"
-    }
-  ]
-
   // Question asked if user decides to add a new role
   const addRoleQ = [
     {
@@ -80,7 +64,6 @@ async function askQuestions() {
   ]
 
   // Welcomes the user on their first boot-up
-  //console.log("Welcome to Employee Tracker! 💼")
   console.log(`                   
    _______  __   __  _______  ___      _______  __   __  _______  _______ 
   |       ||  |_|  ||       ||   |    |       ||  | |  ||       ||       |
@@ -159,6 +142,7 @@ async function askQuestions() {
 
         managers;
         managers = managerArray;
+        managers.unshift("None");
 
         // Questions to be asked if the user wants to create a new employee
         const addEmployeeQ = [
@@ -188,7 +172,7 @@ async function askQuestions() {
             name: "newEmployeeManager"
           }
         ]
-        // Used to get an updated array of roles and managers which is then used for the 'choices' array in the inquirer questions
+        // Used to retrieve user input from enquirer prompt
         const employeeInfo = await inquirer.prompt(addEmployeeQ);
 
         const {newEmployeeFirstName, newEmployeeLastName, newEmployeeRole, newEmployeeManager} = employeeInfo;
@@ -197,21 +181,29 @@ async function askQuestions() {
         const roleIdData = await db.promise().query(`SELECT * FROM roles WHERE title = '${newEmployeeRole}'`);
 
         const roleId = roleIdData[0][0].id;
-      
-        // Finds Manager ID which is used in creating a new employee. Needs to be split back into a first and last name for parameters
-        const manNameArray = newEmployeeManager.split(" ");
-        const manFirstName = manNameArray[0];
-        const manLastName = manNameArray[1];
 
-        // Takes user input for manager and retrieves their corresponding id number
-        const managerIdData = await db.promise().query(`SELECT * FROM employees WHERE first_name = '${manFirstName}' AND last_name = '${manLastName}'`);
+        if (newEmployeeManager === "None") {
+          const noManagerName = "NULL";
 
-        const managerId = managerIdData[0][0].id;
+          // Finally creates new employee and adds it into employees table
+          await db.promise().query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ('${newEmployeeFirstName}', '${newEmployeeLastName}', ${roleId}, ${noManagerName})`);
 
-        // Finally creates new employee and adds it into employees table
-        await db.promise().query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ('${newEmployeeFirstName}', '${newEmployeeLastName}', ${roleId}, ${managerId})`);
+        } else {
+          // Finds Manager ID which is used in creating a new employee. Needs to be split back into a first and last name for parameters
+          const manNameArray = newEmployeeManager.split(" ");
+          const manFirstName = manNameArray[0];
+          const manLastName = manNameArray[1];
 
-        console.log(`${manFirstName} ${manLastName} has been added to employees! ✅`)
+          // Takes user input for manager and retrieves their corresponding id number
+          const managerIdData = await db.promise().query(`SELECT * FROM employees WHERE first_name = '${manFirstName}' AND last_name = '${manLastName}'`);
+
+          const managerId = managerIdData[0][0].id;
+
+          // Finally creates new employee and adds it into employees table
+          await db.promise().query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ('${newEmployeeFirstName}', '${newEmployeeLastName}', ${roleId}, ${managerId})`);
+        }
+
+        console.log(`${newEmployeeFirstName} ${newEmployeeLastName} has been added to employees! ✅`)
 
         break;
 
@@ -231,8 +223,60 @@ async function askQuestions() {
         break;
 
       case "Update Employee Role":
+
+        // Retrieves all employees and creates an array of them
+        let employeeData = await db.promise().query("SELECT * FROM employees")
+
+        let employeeArray = employeeData[0].map(employee => employee.first_name + " " + employee.last_name)
+
+        employees;
+        employees = employeeArray;
+
+        // Retrieves all roles and creates an array of them
+        let uRoleData = await db.promise().query("SELECT * FROM roles")
+
+        let uRoleArray = uRoleData[0].map(role => role.title)
+
+        roles;
+        roles = uRoleArray;
+
+        // Questions asked if user selects 'Update Employee' option
+        const updateEmployeeQ = [
+          {
+            type: "list",
+            message: "Which employee's role do you want to update?",
+            choices: employees,
+            name: "updateEmployeeName"
+          },
+      
+          {
+            type: "list",
+            message: "Which role do you want to assign the selected employee?",
+            choices: roles,
+            name: "updateEmployeeRole"
+          }
+        ]
+
+        // Asks updateEmployeeQ questions
         const updateEmployeeRoleInfo = await inquirer.prompt(updateEmployeeQ);
-        console.log("This does nothing at the moment")
+
+        // Splits selected employee name so it can be used as parameters in the SQL query
+        const empNameArray = updateEmployeeRoleInfo.updateEmployeeName.split(" ");
+        const empFirstName = empNameArray[0];
+        const empLastName = empNameArray[1];
+
+        const updRole = updateEmployeeRoleInfo.updateEmployeeRole;
+
+        // Finds Role ID which is used in creating a new employee
+        const newRoleIdData = await db.promise().query(`SELECT * FROM roles WHERE title = '${updRole}'`);
+
+        const newRoleId = newRoleIdData[0][0].id;
+
+        // Updates the selected employee's role with the new role
+        db.query(`UPDATE employees SET role_id = '${newRoleId}' WHERE first_name = '${empFirstName}' AND last_name = '${empLastName}'`);
+
+        console.log(`\n${empFirstName} ${empLastName}'s role has been modified to ${updRole}! ✅`);
+        
         break;
     }
   }
