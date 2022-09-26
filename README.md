@@ -53,8 +53,11 @@ A video demonstration of this application can be found by clicking [here.](https
 ## Questions
 If you have any questions, please contact me below: 
 
+### Anthony Quinones
 
 Github: [TonyQ032](https://github.com/TonyQ032) 
+
+LinkedIn: [Anthony Quinones](https://www.linkedin.com/in/anthony-quinones/)
 
 Email: AnthonyQ032@gmail.com
 
